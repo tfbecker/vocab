@@ -82,7 +82,25 @@ Push to GitHub triggers automatic redeployment via Coolify webhook.
 git add -A && git commit -m "message" && git push
 ```
 
+## Coolify Deployment
+
+To deploy via Coolify Web Interface:
+1. Go to https://coolify.becker.im
+2. Navigate to: Projects → Main Prod → prod environment
+3. Click "Add New Resource" → "Public Repository"
+4. Enter: `https://github.com/tfbecker/vocab`
+5. Select "Dockerfile" as build pack
+6. Set domain to: `vocab.becker.im`
+7. Set port to: `3000`
+8. Click "Save" and deploy
+
+After deployment, run sync to initialize database:
+```bash
+curl -X POST https://vocab.becker.im/api/sync
+```
+
 ## Coolify App Info
 - **Project**: Main Prod (`m408o8osoo4848k8g0ckgwko`)
 - **Domain**: vocab.becker.im
 - **Build**: Docker
+- **Port**: 3000
