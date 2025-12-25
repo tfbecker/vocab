@@ -1,15 +1,19 @@
-version: '3.8'
-
 services:
   vocab:
     build: .
     ports:
       - "3000"
     volumes:
-      - vocab_data:/app/data
+      - type: bind
+        source: ./data
+        target: /app/data
+        is_directory: true  # Coolify-specific: creates directory if not exists
     environment:
       - NODE_ENV=production
     restart: unless-stopped
-
-volumes:
-  vocab_data:
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/stats"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
