@@ -34,11 +34,16 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Copy necessary files from builder
-# Note: public folder might be empty, use COPY with wildcard to avoid errors
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/data ./data
 COPY --from=builder /app/public ./public
+
+# Create data directory for persistent volume mount
+# This will be overlaid by the Docker volume at runtime
+RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
+
+# Copy markdown deck files for initial sync (if volume is empty)
+COPY --from=builder /app/data/decks ./data/decks
 
 # Set permissions
 RUN chown -R nextjs:nodejs /app
