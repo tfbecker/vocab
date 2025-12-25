@@ -12,36 +12,47 @@ https://vocab.becker.im
 - **Database**: SQLite (better-sqlite3)
 - **Deployment**: Docker + Coolify
 
-## Adding Vocabulary
+## Adding Vocabulary (via API - preferred)
 
-Vocabulary is stored in Markdown files in `data/decks/`. Each file is a deck.
+Use the Claude Skill or API directly - no redeploy needed!
 
-### Deck Format
-```markdown
----
-name: English → German
-description: English vocabulary for German speakers
-language_from: en
-language_to: de
----
-
-## Vokabeln
-
-| front | back | notes |
-|-------|------|-------|
-| accomplish | erreichen, schaffen | verb |
-| comprehensive | umfassend, ausführlich | adjective |
+### Via Claude Code
+Just tell Claude to add vocabulary:
+```
+"Add these vocab words: accomplish = erreichen, thrive = gedeihen"
 ```
 
-### To add new vocabulary:
-1. Edit the markdown file in `data/decks/`
-2. Click "Sync" in the web UI, or call `POST /api/sync`
-3. New cards will be added with "New" state
+### Via API
+```bash
+# Single card
+curl -X POST https://vocab.becker.im/api/cards/add \
+  -H "Content-Type: application/json" \
+  -d '{"front": "accomplish", "back": "erreichen", "notes": "verb"}'
 
-### To create a new deck:
-1. Create a new `.md` file in `data/decks/`
-2. Follow the format above
-3. Sync to import
+# Bulk add
+curl -X POST https://vocab.becker.im/api/cards/add \
+  -H "Content-Type: application/json" \
+  -d '{"cards": [
+    {"front": "accomplish", "back": "erreichen"},
+    {"front": "thrive", "back": "gedeihen"}
+  ]}'
+```
+
+### Via Script
+```bash
+node ~/.claude/skills/vocab/scripts/add.js "accomplish=erreichen" "thrive=gedeihen"
+```
+
+## Backup to GitHub
+
+Export current DB to markdown and push to GitHub:
+```bash
+node ~/.claude/skills/vocab/scripts/backup.js
+```
+
+This preserves both:
+- Vocabulary in human-readable markdown format
+- Git history of all changes
 
 ## API Endpoints
 
@@ -49,9 +60,11 @@ language_to: de
 |--------|----------|-------------|
 | `GET` | `/api/decks` | List all decks with stats |
 | `GET` | `/api/cards/due` | Get due cards (optional `?deck=slug`) |
+| `POST` | `/api/cards/add` | Add cards `{front, back, notes?, deck?}` or `{cards: [...]}` |
 | `POST` | `/api/cards/review` | Submit review `{cardId, rating: 1-4}` |
 | `GET` | `/api/stats` | Get learning statistics |
-| `POST` | `/api/sync` | Sync markdown files to database |
+| `GET` | `/api/backup` | Export all cards as JSON + markdown |
+| `POST` | `/api/sync` | Sync markdown files to database (initial import) |
 | `GET` | `/api/email-preview` | HTML preview of daily email |
 
 ## Rating System
