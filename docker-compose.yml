@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  vocab:
+    build: .
+    ports:
+      - "3000"
+    volumes:
+      - vocab_data:/app/data
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
+volumes:
+  vocab_data:
