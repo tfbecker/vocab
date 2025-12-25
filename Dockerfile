@@ -39,11 +39,8 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
 # Create data directory for persistent volume mount
-# This will be overlaid by the Docker volume at runtime
+# Volume will be mounted at runtime via Coolify
 RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
-
-# Copy markdown deck files for initial sync (if volume is empty)
-COPY --from=builder /app/data/decks ./data/decks
 
 # Set permissions
 RUN chown -R nextjs:nodejs /app
