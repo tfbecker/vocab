@@ -267,6 +267,19 @@ export function getCardCountsByDeck(): Record<string, { total: number; due: numb
   return result;
 }
 
+export function deleteAllCards(deckSlug?: string): number {
+  const database = getDb();
+
+  if (deckSlug) {
+    const result = database.prepare("DELETE FROM cards WHERE deck = ?").run(deckSlug);
+    return result.changes;
+  } else {
+    const result = database.prepare("DELETE FROM cards").run();
+    database.prepare("DELETE FROM reviews").run();
+    return result.changes;
+  }
+}
+
 function rowToCard(row: any): Card {
   return {
     id: row.id,
