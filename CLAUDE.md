@@ -66,6 +66,7 @@ This preserves both:
 | `GET` | `/api/backup` | Export all cards as JSON + markdown |
 | `POST` | `/api/sync` | Sync markdown files to database (initial import) |
 | `GET` | `/api/email-preview` | HTML preview of daily email |
+| `POST/GET` | `/api/send-email` | Send daily email (used by cron) |
 
 ## Rating System
 - **1 (Again)**: Forgot completely, reset interval
@@ -74,11 +75,16 @@ This preserves both:
 - **4 (Easy)**: Too easy, longer interval
 
 ## Daily Email
-Emails are sent Mon-Fri at 8:00 AM to felixbecker1111@gmail.com via cron job.
+Emails are sent Mon-Fri at 8:00 AM to fe.becker@holzlandbecker.de via Docker cron sidecar.
 
-To manually trigger:
+**Architecture:**
+- `cron` container runs Alpine with crond
+- Calls `http://vocab:3000/api/send-email` at 8:00 AM weekdays
+- SMTP credentials passed via environment variables
+
+**To manually trigger:**
 ```bash
-/root/Felix-Home/Coding/vocab/scripts/send-daily-email.sh
+curl -X POST https://vocab.becker.im/api/send-email
 ```
 
 ## Development
@@ -114,6 +120,23 @@ curl -X POST https://vocab.becker.im/api/sync
 
 ## Coolify App Info
 - **Project**: Main Prod (`m408o8osoo4848k8g0ckgwko`)
+- **App UUID**: `v8w8owcwcsos0gk4wcws4k40`
 - **Domain**: vocab.becker.im
 - **Build**: Docker
 - **Port**: 3000
+
+## Persistent Storage (WICHTIG!)
+
+Die SQLite-Datenbank muss persistent sein, sonst gehen Daten bei Redeploy verloren!
+
+**Konfiguration via Coolify Web-UI:**
+1. Öffne https://coolify.becker.im
+2. Gehe zu: Projects → Main Prod → prod → Vocab App
+3. Klicke auf **Storages** Tab
+4. Klicke **+ Add** → **Volume**
+5. Konfiguriere:
+   - **Name**: `vocab-data`
+   - **Destination Path**: `/app/data`
+6. Speichern und Redeploy
+
+**Docs:** https://coolify.io/docs/knowledge-base/persistent-storage

@@ -10,6 +10,8 @@ services:
         is_directory: true  # Coolify-specific: creates directory if not exists
     environment:
       - NODE_ENV=production
+      - SMTP_USER=felixbecker1111@gmail.com
+      - SMTP_PASS=hzmpnkkoiotwriei
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/stats"]
@@ -17,3 +19,15 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  cron:
+    image: alpine:latest
+    depends_on:
+      vocab:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo '0 8 * * 1-5 wget -q -O - http://vocab:3000/api/send-email' | crontab - &&
+        crond -f -l 2
+      "
+    restart: unless-stopped
