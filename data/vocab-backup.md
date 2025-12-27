@@ -1,6 +1,6 @@
 # Vocab Backup
 
-**Last backup:** 2025-12-27 17:23
+**Last backup:** 2025-12-27 18:31
 
 **Total cards:** 339
 
@@ -340,7 +340,7 @@ language_to: de
 | TEST_BACKUP_2 | Zweiter Test | Second test to verify incremental backup |
 | TEST_BACKUP_WORD | Test-Backup-Wort | This is a test word to verify backup works |
 | conducive | förderlich, zuträglich | a culture that isn't super conducive to having a good time |
-| ingenuity | Einfallsreichtum, Erfindungsgabe |  |
+| ingenuity | Einfallsreichtum, Erfindungsgabe | The Wright brothers showed remarkable ingenuity in building the first successful airplane. |
 | expedite | beschleunigen, vorantreiben | While the Soviet experiment took decades to achieve near-complete domestication, we could potentially expedite this process by exploring genetic engineering. |
 | arduous | mühsam, beschwerlich, anstrengend | Giving birth is an arduous ordeal, doing it in a stable is nothing short of absurd. |
 | postulates | postuliert / nimmt an | The theory postulates that all matter is composed of tiny particles. |
