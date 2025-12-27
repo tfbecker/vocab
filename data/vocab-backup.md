@@ -2,7 +2,7 @@
 
 **Last backup:** 2025-12-27 15:47
 
-**Total cards:** 16
+**Total cards:** 17
 
 ---
 name: english-german
@@ -15,6 +15,7 @@ language_to: de
 
 | front | back | notes |
 |-------|------|-------|
+| TEST_BACKUP_2 | Zweiter Test | Second test to verify incremental backup |
 | TEST_BACKUP_WORD | Test-Backup-Wort | This is a test word to verify backup works |
 | conducive | förderlich, zuträglich | a culture that isn't super conducive to having a good time |
 | ingenuity | Einfallsreichtum, Erfindungsgabe |  |
