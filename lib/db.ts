@@ -67,9 +67,7 @@ export function upsertCard(deck: string, front: string, back: string, notes: str
   database.prepare(`
     INSERT INTO cards (id, deck, front, back, notes, due, stability, difficulty, state)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(id) DO UPDATE SET
-      back = excluded.back,
-      notes = excluded.notes
+    ON CONFLICT(id) DO NOTHING
   `).run(
     id,
     deck,
