@@ -10,12 +10,6 @@ services:
       - SMTP_USER=felixbecker1111@gmail.com
       - SMTP_PASS=hzmpnkkoiotwriei
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.vocab.rule=Host(`vocab.becker.im`)"
-      - "traefik.http.routers.vocab.entrypoints=https"
-      - "traefik.http.routers.vocab.tls=true"
-      - "traefik.http.services.vocab.loadbalancer.server.port=3000"
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/stats"]
       interval: 30s
@@ -37,8 +31,3 @@ services:
 
 volumes:
   vocab-data:
-
-networks:
-  default:
-    external: true
-    name: coolify
