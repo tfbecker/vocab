@@ -9,6 +9,8 @@ services:
       - NODE_ENV=production
       - SMTP_USER=felixbecker1111@gmail.com
       - SMTP_PASS=hzmpnkkoiotwriei
+    labels:
+      - "traefik.http.services.vocab-app.loadbalancer.server.port=3000"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/stats"]
@@ -21,6 +23,8 @@ services:
     image: alpine:latest
     depends_on:
       - app
+    labels:
+      - "traefik.enable=false"
     entrypoint: /bin/sh
     command:
       - -c
