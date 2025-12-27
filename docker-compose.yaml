@@ -1,5 +1,5 @@
 services:
-  vocab:
+  app:
     build: .
     ports:
       - "3000"
@@ -20,12 +20,12 @@ services:
   cron:
     image: alpine:latest
     depends_on:
-      - vocab
+      - app
     entrypoint: /bin/sh
     command:
       - -c
       - |
-        echo '0 8 * * 1-5 wget -q -O - http://vocab:3000/api/send-email' | crontab -
+        echo '0 8 * * 1-5 wget -q -O - http://app:3000/api/send-email' | crontab -
         crond -f -l 2
     restart: unless-stopped
 
