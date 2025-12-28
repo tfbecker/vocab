@@ -1,6 +1,6 @@
 # Vocab Backup
 
-**Last backup:** 2025-12-28 00:00
+**Last backup:** 2025-12-29 00:00
 
 **Total cards:** 339
 
