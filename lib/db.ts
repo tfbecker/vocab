@@ -265,6 +265,37 @@ export function getCardCountsByDeck(): Record<string, { total: number; due: numb
   return result;
 }
 
+export function updateCardNotes(id: string, notes: string | null): boolean {
+  const database = getDb();
+  const result = database.prepare(`
+    UPDATE cards SET notes = ? WHERE id = ?
+  `).run(notes, id);
+  return result.changes > 0;
+}
+
+export function updateCardById(id: string, updates: { back?: string; notes?: string }): boolean {
+  const database = getDb();
+  const setClauses: string[] = [];
+  const params: any[] = [];
+
+  if (updates.back !== undefined) {
+    setClauses.push("back = ?");
+    params.push(updates.back);
+  }
+  if (updates.notes !== undefined) {
+    setClauses.push("notes = ?");
+    params.push(updates.notes);
+  }
+
+  if (setClauses.length === 0) return false;
+
+  params.push(id);
+  const result = database.prepare(`
+    UPDATE cards SET ${setClauses.join(", ")} WHERE id = ?
+  `).run(...params);
+  return result.changes > 0;
+}
+
 export function deleteAllCards(deckSlug?: string): number {
   const database = getDb();
 
