@@ -17,16 +17,21 @@ interface CardData {
 function ReviewContent() {
   const searchParams = useSearchParams();
   const deck = searchParams.get("deck");
+  const limitParam = searchParams.get("limit");
+  const limit = limitParam ? parseInt(limitParam, 10) : null;
+  const isDailyGoal = limit !== null;
 
   const [cards, setCards] = useState<CardData[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [loading, setLoading] = useState(true);
   const [reviewing, setReviewing] = useState(false);
+  const [sessionComplete, setSessionComplete] = useState(false);
+  const [reviewedCount, setReviewedCount] = useState(0);
 
   useEffect(() => {
     loadCards();
-  }, [deck]);
+  }, [deck, limit]);
 
   async function loadCards() {
     setLoading(true);
@@ -34,9 +39,18 @@ function ReviewContent() {
       const url = deck ? `/api/cards/due?deck=${deck}` : "/api/cards/due";
       const res = await fetch(url);
       const data = await res.json();
-      setCards(data.cards || []);
+      let loadedCards = data.cards || [];
+
+      // Limit cards if daily goal mode
+      if (limit && loadedCards.length > limit) {
+        loadedCards = loadedCards.slice(0, limit);
+      }
+
+      setCards(loadedCards);
       setCurrentIndex(0);
       setIsFlipped(false);
+      setSessionComplete(false);
+      setReviewedCount(0);
     } catch (error) {
       console.error("Failed to load cards:", error);
     } finally {
@@ -58,13 +72,15 @@ function ReviewContent() {
         })
       });
 
+      setReviewedCount(prev => prev + 1);
+
       // Move to next card
       if (currentIndex < cards.length - 1) {
         setCurrentIndex(currentIndex + 1);
         setIsFlipped(false);
       } else {
         // Session complete
-        setCards([]);
+        setSessionComplete(true);
       }
     } catch (error) {
       console.error("Failed to submit review:", error);
@@ -99,18 +115,62 @@ function ReviewContent() {
     );
   }
 
-  if (cards.length === 0) {
+  // Session complete celebration
+  if (sessionComplete || cards.length === 0) {
+    const xpEarned = reviewedCount * 10;
+
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
-        <div className="text-6xl mb-4">🎉</div>
-        <h1 className="text-2xl font-bold text-white mb-2">All done!</h1>
-        <p className="text-slate-400 mb-6">No more cards to review right now.</p>
-        <a
-          href="/"
-          className="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
-        >
-          Back to Home
-        </a>
+        {/* Celebration animation */}
+        <div className="relative mb-6">
+          <div className="text-8xl animate-bounce">
+            {isDailyGoal ? "🔥" : "🎉"}
+          </div>
+          {isDailyGoal && (
+            <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+              +{xpEarned} XP
+            </div>
+          )}
+        </div>
+
+        {isDailyGoal ? (
+          <>
+            <h1 className="text-3xl font-bold text-white mb-2">Daily Goal Complete!</h1>
+            <p className="text-xl text-orange-400 font-semibold mb-2">
+              Streak maintained!
+            </p>
+            <p className="text-slate-400 mb-6">
+              You reviewed {reviewedCount} cards and earned {xpEarned} XP
+            </p>
+          </>
+        ) : (
+          <>
+            <h1 className="text-2xl font-bold text-white mb-2">All done!</h1>
+            <p className="text-slate-400 mb-2">
+              {reviewedCount > 0 ? `You reviewed ${reviewedCount} cards` : "No more cards to review right now."}
+            </p>
+            {reviewedCount > 0 && (
+              <p className="text-green-400 font-semibold mb-4">+{xpEarned} XP</p>
+            )}
+          </>
+        )}
+
+        <div className="flex gap-4">
+          <a
+            href="/"
+            className="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
+          >
+            Back to Home
+          </a>
+          {isDailyGoal && (
+            <a
+              href="/review"
+              className="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
+            >
+              Continue Reviewing
+            </a>
+          )}
+        </div>
       </div>
     );
   }

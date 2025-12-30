@@ -463,6 +463,42 @@ export function getReviewActivity(days: number = 140): DailyActivity[] {
   return activity;
 }
 
+// Daily goal tracking
+const DAILY_GOAL = 10;
+
+interface TodayStats {
+  reviews_today: number;
+  daily_goal: number;
+  goal_completed: boolean;
+  xp_today: number; // 10 XP per review
+  total_xp: number;
+}
+
+export function getTodayStats(): TodayStats {
+  const database = getDb();
+  const today = new Date().toISOString().split("T")[0];
+
+  // Get today's review count
+  const todayReviews = database.prepare(`
+    SELECT COUNT(*) as count
+    FROM reviews
+    WHERE DATE(reviewed_at) = ?
+  `).get(today) as { count: number };
+
+  // Get total reviews for XP
+  const totalReviews = database.prepare(`
+    SELECT COUNT(*) as count FROM reviews
+  `).get() as { count: number };
+
+  return {
+    reviews_today: todayReviews.count,
+    daily_goal: DAILY_GOAL,
+    goal_completed: todayReviews.count >= DAILY_GOAL,
+    xp_today: todayReviews.count * 10,
+    total_xp: totalReviews.count * 10
+  };
+}
+
 // Comment management
 export interface CardComment {
   id: number;
