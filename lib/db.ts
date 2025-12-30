@@ -69,6 +69,22 @@ function initDb() {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
   `).run();
+
+  // Create card_comments table for feedback on cards
+  database.prepare(`
+    CREATE TABLE IF NOT EXISTS card_comments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      card_id TEXT NOT NULL,
+      content TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'open',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      completed_at TEXT,
+      FOREIGN KEY (card_id) REFERENCES cards(id)
+    )
+  `).run();
+
+  database.prepare("CREATE INDEX IF NOT EXISTS idx_comments_card ON card_comments(card_id)").run();
+  database.prepare("CREATE INDEX IF NOT EXISTS idx_comments_status ON card_comments(status)").run();
 }
 
 export function generateCardId(deck: string, front: string): string {
@@ -425,4 +441,143 @@ function rowToCard(row: CardRow): Card {
     last_review: row.last_review ? new Date(row.last_review) : null,
     created_at: new Date(row.created_at)
   };
+}
+
+// Activity tracking for streak visualization
+interface DailyActivity {
+  date: string;
+  count: number;
+}
+
+export function getReviewActivity(days: number = 140): DailyActivity[] {
+  const database = getDb();
+
+  const activity = database.prepare(`
+    SELECT DATE(reviewed_at) as date, COUNT(*) as count
+    FROM reviews
+    WHERE reviewed_at >= datetime('now', '-${days} days')
+    GROUP BY DATE(reviewed_at)
+    ORDER BY date DESC
+  `).all() as DailyActivity[];
+
+  return activity;
+}
+
+// Comment management
+export interface CardComment {
+  id: number;
+  card_id: string;
+  content: string;
+  status: 'open' | 'completed';
+  created_at: string;
+  completed_at: string | null;
+  // Joined card data
+  card_front?: string;
+  card_back?: string;
+  card_deck?: string;
+}
+
+interface CommentRow {
+  id: number;
+  card_id: string;
+  content: string;
+  status: string;
+  created_at: string;
+  completed_at: string | null;
+  card_front?: string;
+  card_back?: string;
+  card_deck?: string;
+}
+
+export function addComment(cardId: string, content: string): CardComment {
+  const database = getDb();
+
+  const result = database.prepare(`
+    INSERT INTO card_comments (card_id, content)
+    VALUES (?, ?)
+  `).run(cardId, content);
+
+  return {
+    id: result.lastInsertRowid as number,
+    card_id: cardId,
+    content,
+    status: 'open',
+    created_at: new Date().toISOString(),
+    completed_at: null
+  };
+}
+
+export function getComments(status?: 'open' | 'completed'): CardComment[] {
+  const database = getDb();
+
+  let query = `
+    SELECT cc.*, c.front as card_front, c.back as card_back, c.deck as card_deck
+    FROM card_comments cc
+    LEFT JOIN cards c ON cc.card_id = c.id
+  `;
+
+  if (status) {
+    query += ` WHERE cc.status = ?`;
+  }
+
+  query += ` ORDER BY cc.created_at DESC`;
+
+  const rows = status
+    ? database.prepare(query).all(status) as CommentRow[]
+    : database.prepare(query).all() as CommentRow[];
+
+  return rows.map(row => ({
+    id: row.id,
+    card_id: row.card_id,
+    content: row.content,
+    status: row.status as 'open' | 'completed',
+    created_at: row.created_at,
+    completed_at: row.completed_at,
+    card_front: row.card_front,
+    card_back: row.card_back,
+    card_deck: row.card_deck
+  }));
+}
+
+export function getCommentsForCard(cardId: string): CardComment[] {
+  const database = getDb();
+
+  const rows = database.prepare(`
+    SELECT * FROM card_comments
+    WHERE card_id = ?
+    ORDER BY created_at DESC
+  `).all(cardId) as CommentRow[];
+
+  return rows.map(row => ({
+    id: row.id,
+    card_id: row.card_id,
+    content: row.content,
+    status: row.status as 'open' | 'completed',
+    created_at: row.created_at,
+    completed_at: row.completed_at
+  }));
+}
+
+export function updateCommentStatus(id: number, status: 'open' | 'completed'): boolean {
+  const database = getDb();
+
+  const completedAt = status === 'completed' ? new Date().toISOString() : null;
+
+  const result = database.prepare(`
+    UPDATE card_comments
+    SET status = ?, completed_at = ?
+    WHERE id = ?
+  `).run(status, completedAt, id);
+
+  return result.changes > 0;
+}
+
+export function deleteComment(id: number): boolean {
+  const database = getDb();
+
+  const result = database.prepare(`
+    DELETE FROM card_comments WHERE id = ?
+  `).run(id);
+
+  return result.changes > 0;
 }

@@ -62,11 +62,30 @@ This preserves both:
 | `GET` | `/api/cards/due` | Get due cards (optional `?deck=slug`) |
 | `POST` | `/api/cards/add` | Add cards `{front, back, notes?, deck?}` or `{cards: [...]}` |
 | `POST` | `/api/cards/review` | Submit review `{cardId, rating: 1-4}` |
-| `GET` | `/api/stats` | Get learning statistics |
+| `GET` | `/api/stats` | Get learning statistics + activity data |
 | `GET` | `/api/backup` | Export all cards as JSON + markdown |
 | `POST` | `/api/sync` | Sync markdown files to database (initial import) |
 | `GET` | `/api/email-preview` | HTML preview of daily email |
 | `POST/GET` | `/api/send-email` | Send daily email (used by cron) |
+| `GET` | `/api/comments` | Get comments (optional `?status=open\|completed`) |
+| `POST` | `/api/comments` | Add comment `{cardId, content}` |
+| `PATCH` | `/api/comments` | Update status `{id, status: 'open'\|'completed'}` |
+| `DELETE` | `/api/comments?id=N` | Delete comment |
+
+## Card Comments System
+
+Users can add feedback/comments to cards while reviewing. Comments are saved in the database and can be processed via Claude Code.
+
+### Workflow for processing comments:
+1. Get open comments: `curl https://vocab.becker.im/api/comments?status=open`
+2. Update card content based on feedback
+3. Mark comment as completed: `curl -X PATCH https://vocab.becker.im/api/comments -d '{"id": 1, "status": "completed"}'`
+
+### Example: Process all open comments
+```bash
+# Get all open comments (returns card info + comment content)
+curl -s https://vocab.becker.im/api/comments?status=open | jq '.comments[] | {id, card_front, content}'
+```
 
 ## Rating System
 - **1 (Again)**: Forgot completely, reset interval

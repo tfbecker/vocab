@@ -135,6 +135,7 @@ function ReviewContent() {
 
       {/* Card */}
       <Card
+        id={currentCard.id}
         front={currentCard.front}
         back={currentCard.back}
         notes={currentCard.notes}

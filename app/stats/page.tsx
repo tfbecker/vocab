@@ -1,6 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ActivityGrid from "@/components/ActivityGrid";
+
+interface DailyActivity {
+  date: string;
+  count: number;
+}
 
 interface Stats {
   total_reviews: number;
@@ -17,6 +23,7 @@ interface Stats {
     due: number;
     byState: Record<string, number>;
   }>;
+  activity: DailyActivity[];
 }
 
 export default function StatsPage() {
@@ -68,7 +75,7 @@ export default function StatsPage() {
         </div>
         <div className="bg-slate-800 rounded-xl p-6 text-center">
           <div className="text-3xl font-bold text-orange-400">{stats.streak}</div>
-          <div className="text-slate-400 mt-1">🔥 Day Streak</div>
+          <div className="text-slate-400 mt-1">Day Streak</div>
         </div>
         <div className="bg-slate-800 rounded-xl p-6 text-center">
           <div className="text-3xl font-bold text-green-400">{stats.retention}%</div>
@@ -79,6 +86,9 @@ export default function StatsPage() {
           <div className="text-slate-400 mt-1">Total Cards</div>
         </div>
       </div>
+
+      {/* Activity Grid */}
+      <ActivityGrid activity={stats.activity || []} />
 
       {/* Card States */}
       <div className="bg-slate-800 rounded-xl p-6">
