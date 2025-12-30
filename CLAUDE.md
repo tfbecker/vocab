@@ -160,29 +160,18 @@ Die SQLite-Datenbank muss persistent sein, sonst gehen Daten bei Redeploy verlor
 
 **Docs:** https://coolify.io/docs/knowledge-base/persistent-storage
 
-## IMPORTANT: Deployment Verification
+## Deployment Verification
 
-**After pushing code changes, ALWAYS verify the deployment worked:**
+See `~/Coding/CLAUDE.md` for full verification process. Quick commands for this app:
 
-1. **Trigger deployment** (if not auto-deployed):
-   ```bash
-   node ~/.claude/skills/coolify/scripts/deploy.js --deploy zgskwcoc4oggsogkc0gg8kk8
-   ```
+```bash
+# Trigger deployment
+node ~/.claude/skills/coolify/scripts/deploy.js --deploy zgskwcoc4oggsogkc0gg8kk8
 
-2. **Wait for deployment** (typically 60-90 seconds for this app)
+# Verify (poll until this returns expected data)
+curl -s https://vocab.becker.im/api/stats | jq 'has("activity")'
 
-3. **Verify via API test**:
-   ```bash
-   # Test a new/modified endpoint
-   curl -s https://vocab.becker.im/api/stats | jq 'keys'
-
-   # Or test specific feature
-   curl -s https://vocab.becker.im/api/comments?status=open
-   ```
-
-4. **Check container logs if issues**:
-   ```bash
-   sg docker -c "docker logs app-zgskwcoc4oggsogkc0gg8kk8-* --tail 50"
-   ```
-
-**Never assume deployment succeeded just because git push worked. Always test the live site.**
+# Check logs if issues
+sg docker -c "docker ps" | grep zgskwcoc4oggsogkc0gg8kk8
+sg docker -c "docker logs app-zgskwcoc4oggsogkc0gg8kk8-* --tail 50"
+```
