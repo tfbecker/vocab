@@ -3,7 +3,11 @@ import path from "path";
 import matter from "gray-matter";
 import type { Deck, VocabEntry } from "./types";
 
-const DECKS_DIR = path.join(process.cwd(), "data", "decks");
+// In production Docker, decks are at /app/decks (not under /app/data which is the volume mount)
+// In development, decks are at data/decks
+const DECKS_DIR = fs.existsSync(path.join(process.cwd(), "decks"))
+  ? path.join(process.cwd(), "decks")
+  : path.join(process.cwd(), "data", "decks");
 
 export function getAllDecks(): Deck[] {
   if (!fs.existsSync(DECKS_DIR)) {

@@ -37,6 +37,8 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
+# Copy deck files to /app/decks (NOT under /app/data which is the volume mount)
+COPY --from=builder /app/data/decks ./decks
 
 # Create data directory for persistent volume mount
 # Volume will be mounted at runtime via Coolify
