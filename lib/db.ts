@@ -1,7 +1,7 @@
 import Database from "better-sqlite3";
 import path from "path";
 import { State, createEmptyCard } from "ts-fsrs";
-import type { Card, ReviewStats, Deck } from "./types";
+import type { Card, CardRow, DeckRow, DeckMetadata, ReviewStats, CardStateCount } from "./types";
 import crypto from "crypto";
 
 const DB_PATH = path.join(process.cwd(), "data", "vocab.db");
@@ -95,9 +95,9 @@ export function upsertDeck(
   `).run(slug, name, description || null, language_from, language_to);
 }
 
-export function getDeckBySlug(slug: string): Deck | null {
+export function getDeckBySlug(slug: string): DeckMetadata | null {
   const database = getDb();
-  const row = database.prepare("SELECT * FROM decks WHERE slug = ?").get(slug) as any;
+  const row = database.prepare("SELECT * FROM decks WHERE slug = ?").get(slug) as DeckRow | undefined;
   if (!row) return null;
   return {
     slug: row.slug,
@@ -105,20 +105,18 @@ export function getDeckBySlug(slug: string): Deck | null {
     description: row.description || "",
     language_from: row.language_from,
     language_to: row.language_to,
-    cards: []
   };
 }
 
-export function getAllDecksFromDb(): Deck[] {
+export function getAllDecksFromDb(): DeckMetadata[] {
   const database = getDb();
-  const rows = database.prepare("SELECT * FROM decks ORDER BY created_at DESC").all() as any[];
+  const rows = database.prepare("SELECT * FROM decks ORDER BY created_at DESC").all() as DeckRow[];
   return rows.map(row => ({
     slug: row.slug,
     name: row.name,
     description: row.description || "",
     language_from: row.language_from,
     language_to: row.language_to,
-    cards: []
   }));
 }
 
@@ -168,7 +166,7 @@ export function upsertCard(deck: string, front: string, back: string, notes: str
 
 export function getCardById(id: string): Card | null {
   const database = getDb();
-  const row = database.prepare("SELECT * FROM cards WHERE id = ?").get(id) as any;
+  const row = database.prepare("SELECT * FROM cards WHERE id = ?").get(id) as CardRow | undefined;
   if (!row) return null;
   return rowToCard(row);
 }
@@ -178,7 +176,7 @@ export function getDueCards(deckSlug?: string): Card[] {
   const now = new Date().toISOString();
 
   let query = "SELECT * FROM cards WHERE due <= ?";
-  const params: any[] = [now];
+  const params: (string | number)[] = [now];
 
   if (deckSlug) {
     query += " AND deck = ?";
@@ -187,7 +185,7 @@ export function getDueCards(deckSlug?: string): Card[] {
 
   query += " ORDER BY due ASC";
 
-  const rows = database.prepare(query).all(...params) as any[];
+  const rows = database.prepare(query).all(...params) as CardRow[];
   return rows.map(rowToCard);
 }
 
@@ -195,7 +193,7 @@ export function getAllCards(deckSlug?: string): Card[] {
   const database = getDb();
 
   let query = "SELECT * FROM cards";
-  const params: any[] = [];
+  const params: string[] = [];
 
   if (deckSlug) {
     query += " WHERE deck = ?";
@@ -204,7 +202,7 @@ export function getAllCards(deckSlug?: string): Card[] {
 
   query += " ORDER BY created_at DESC";
 
-  const rows = database.prepare(query).all(...params) as any[];
+  const rows = database.prepare(query).all(...params) as CardRow[];
   return rows.map(rowToCard);
 }
 
@@ -251,16 +249,21 @@ export function updateCardAfterReview(
   `).run(id, rating);
 }
 
+interface CountRow { count: number }
+interface StateCountRow { state: number; count: number }
+interface DateRow { date: string }
+interface RetentionRow { total: number; passed: number }
+
 export function getStats(): ReviewStats {
   const database = getDb();
 
-  const totalReviews = database.prepare("SELECT COUNT(*) as count FROM reviews").get() as any;
+  const totalReviews = database.prepare("SELECT COUNT(*) as count FROM reviews").get() as CountRow;
 
   const byState = database.prepare(`
     SELECT state, COUNT(*) as count FROM cards GROUP BY state
-  `).all() as any[];
+  `).all() as StateCountRow[];
 
-  const stateMap = { new: 0, learning: 0, review: 0, relearning: 0 };
+  const stateMap: CardStateCount = { new: 0, learning: 0, review: 0, relearning: 0 };
   for (const row of byState) {
     switch (row.state) {
       case State.New: stateMap.new = row.count; break;
@@ -277,7 +280,7 @@ export function getStats(): ReviewStats {
     GROUP BY DATE(reviewed_at)
     ORDER BY date DESC
     LIMIT 30
-  `).all() as any[];
+  `).all() as DateRow[];
 
   let streak = 0;
   const today = new Date().toISOString().split("T")[0];
@@ -301,7 +304,7 @@ export function getStats(): ReviewStats {
       SUM(CASE WHEN rating >= 3 THEN 1 ELSE 0 END) as passed
     FROM reviews
     WHERE reviewed_at >= datetime('now', '-30 days')
-  `).get() as any;
+  `).get() as RetentionRow;
 
   const retention = retentionQuery.total > 0
     ? Math.round((retentionQuery.passed / retentionQuery.total) * 100)
@@ -315,7 +318,17 @@ export function getStats(): ReviewStats {
   };
 }
 
-export function getCardCountsByDeck(): Record<string, { total: number; due: number; byState: Record<string, number> }> {
+interface DeckCountRow {
+  deck: string;
+  total: number;
+  due: number;
+  new: number;
+  learning: number;
+  review: number;
+  relearning: number;
+}
+
+export function getCardCountsByDeck(): Record<string, { total: number; due: number; byState: CardStateCount }> {
   const database = getDb();
   const now = new Date().toISOString();
 
@@ -330,9 +343,9 @@ export function getCardCountsByDeck(): Record<string, { total: number; due: numb
       SUM(CASE WHEN state = 3 THEN 1 ELSE 0 END) as relearning
     FROM cards
     GROUP BY deck
-  `).all(now) as any[];
+  `).all(now) as DeckCountRow[];
 
-  const result: Record<string, { total: number; due: number; byState: Record<string, number> }> = {};
+  const result: Record<string, { total: number; due: number; byState: CardStateCount }> = {};
 
   for (const row of counts) {
     result[row.deck] = {
@@ -361,7 +374,7 @@ export function updateCardNotes(id: string, notes: string | null): boolean {
 export function updateCardById(id: string, updates: { back?: string; notes?: string }): boolean {
   const database = getDb();
   const setClauses: string[] = [];
-  const params: any[] = [];
+  const params: (string | null)[] = [];
 
   if (updates.back !== undefined) {
     setClauses.push("back = ?");
@@ -369,7 +382,7 @@ export function updateCardById(id: string, updates: { back?: string; notes?: str
   }
   if (updates.notes !== undefined) {
     setClauses.push("notes = ?");
-    params.push(updates.notes);
+    params.push(updates.notes ?? null);
   }
 
   if (setClauses.length === 0) return false;
@@ -394,7 +407,7 @@ export function deleteAllCards(deckSlug?: string): number {
   }
 }
 
-function rowToCard(row: any): Card {
+function rowToCard(row: CardRow): Card {
   return {
     id: row.id,
     deck: row.deck,

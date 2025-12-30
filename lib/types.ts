@@ -18,12 +18,46 @@ export interface Card {
   created_at: Date;
 }
 
-export interface Deck {
+/** Database row for cards table */
+export interface CardRow {
+  id: string;
+  deck: string;
+  front: string;
+  back: string;
+  notes: string | null;
+  due: string;
+  stability: number;
+  difficulty: number;
+  elapsed_days: number;
+  scheduled_days: number;
+  reps: number;
+  lapses: number;
+  state: number;
+  last_review: string | null;
+  created_at: string;
+}
+
+/** Database row for decks table */
+export interface DeckRow {
+  slug: string;
+  name: string;
+  description: string | null;
+  language_from: string;
+  language_to: string;
+  created_at: string;
+}
+
+/** Deck metadata (from database) */
+export interface DeckMetadata {
   slug: string;
   name: string;
   description: string;
   language_from: string;
   language_to: string;
+}
+
+/** Deck with cards (from markdown import) */
+export interface Deck extends DeckMetadata {
   cards: VocabEntry[];
 }
 
@@ -57,3 +91,11 @@ export interface ReviewStats {
 }
 
 export type Rating = 1 | 2 | 3 | 4; // Again, Hard, Good, Easy
+
+/** Card state counts */
+export interface CardStateCount {
+  new: number;
+  learning: number;
+  review: number;
+  relearning: number;
+}
