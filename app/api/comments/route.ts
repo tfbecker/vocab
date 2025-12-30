@@ -1,13 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getComments, addComment, updateCommentStatus, deleteComment, getCardById } from "@/lib/db";
+import { getComments, getCommentsForCard, addComment, updateCommentStatus, deleteComment, getCardById } from "@/lib/db";
 
-// GET /api/comments - List comments (optionally filtered by status)
+// GET /api/comments - List comments (optionally filtered by status or cardId)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") as "open" | "completed" | null;
+    const cardId = searchParams.get("cardId");
 
-    const comments = getComments(status || undefined);
+    let comments;
+    if (cardId) {
+      // Get comments for a specific card
+      comments = getCommentsForCard(cardId);
+    } else {
+      // Get all comments, optionally filtered by status
+      comments = getComments(status || undefined);
+    }
 
     return NextResponse.json({
       success: true,
