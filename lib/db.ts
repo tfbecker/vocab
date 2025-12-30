@@ -1,7 +1,7 @@
 import Database from "better-sqlite3";
 import path from "path";
 import { State, createEmptyCard } from "ts-fsrs";
-import type { Card, ReviewStats } from "./types";
+import type { Card, ReviewStats, Deck } from "./types";
 import crypto from "crypto";
 
 const DB_PATH = path.join(process.cwd(), "data", "vocab.db");
@@ -20,7 +20,8 @@ export function getDb(): Database.Database {
 function initDb() {
   const database = getDb();
 
-  database.exec(`
+  // Create cards table
+  database.prepare(`
     CREATE TABLE IF NOT EXISTS cards (
       id TEXT PRIMARY KEY,
       deck TEXT NOT NULL,
@@ -37,32 +38,116 @@ function initDb() {
       state INTEGER NOT NULL DEFAULT 0,
       last_review TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
+    )
+  `).run();
 
-    CREATE INDEX IF NOT EXISTS idx_cards_due ON cards(due);
-    CREATE INDEX IF NOT EXISTS idx_cards_deck ON cards(deck);
-    CREATE INDEX IF NOT EXISTS idx_cards_state ON cards(state);
+  database.prepare("CREATE INDEX IF NOT EXISTS idx_cards_due ON cards(due)").run();
+  database.prepare("CREATE INDEX IF NOT EXISTS idx_cards_deck ON cards(deck)").run();
+  database.prepare("CREATE INDEX IF NOT EXISTS idx_cards_state ON cards(state)").run();
 
+  // Create reviews table
+  database.prepare(`
     CREATE TABLE IF NOT EXISTS reviews (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       card_id TEXT NOT NULL,
       rating INTEGER NOT NULL,
       reviewed_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (card_id) REFERENCES cards(id)
-    );
+    )
+  `).run();
 
-    CREATE INDEX IF NOT EXISTS idx_reviews_date ON reviews(reviewed_at);
-  `);
+  database.prepare("CREATE INDEX IF NOT EXISTS idx_reviews_date ON reviews(reviewed_at)").run();
+
+  // Create decks table
+  database.prepare(`
+    CREATE TABLE IF NOT EXISTS decks (
+      slug TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT,
+      language_from TEXT NOT NULL DEFAULT 'en',
+      language_to TEXT NOT NULL DEFAULT 'en',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `).run();
 }
 
 export function generateCardId(deck: string, front: string): string {
   return crypto.createHash("md5").update(`${deck}:${front}`).digest("hex").slice(0, 12);
 }
 
+// Deck functions
+export function upsertDeck(
+  slug: string,
+  name: string,
+  description?: string,
+  language_from: string = "en",
+  language_to: string = "en"
+): void {
+  const database = getDb();
+  database.prepare(`
+    INSERT INTO decks (slug, name, description, language_from, language_to)
+    VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT(slug) DO UPDATE SET
+      name = excluded.name,
+      description = excluded.description,
+      language_from = excluded.language_from,
+      language_to = excluded.language_to
+  `).run(slug, name, description || null, language_from, language_to);
+}
+
+export function getDeckBySlug(slug: string): Deck | null {
+  const database = getDb();
+  const row = database.prepare("SELECT * FROM decks WHERE slug = ?").get(slug) as any;
+  if (!row) return null;
+  return {
+    slug: row.slug,
+    name: row.name,
+    description: row.description || "",
+    language_from: row.language_from,
+    language_to: row.language_to,
+    cards: []
+  };
+}
+
+export function getAllDecksFromDb(): Deck[] {
+  const database = getDb();
+  const rows = database.prepare("SELECT * FROM decks ORDER BY created_at DESC").all() as any[];
+  return rows.map(row => ({
+    slug: row.slug,
+    name: row.name,
+    description: row.description || "",
+    language_from: row.language_from,
+    language_to: row.language_to,
+    cards: []
+  }));
+}
+
+export function ensureDeckExists(slug: string): void {
+  const existing = getDeckBySlug(slug);
+  if (!existing) {
+    // Auto-create deck with slug as name
+    const name = slug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+    upsertDeck(slug, name, `Auto-created deck: ${name}`);
+  }
+}
+
+export function deleteDeck(slug: string): number {
+  const database = getDb();
+  // Delete cards first
+  database.prepare("DELETE FROM cards WHERE deck = ?").run(slug);
+  // Delete deck
+  const result = database.prepare("DELETE FROM decks WHERE slug = ?").run(slug);
+  return result.changes;
+}
+
+// Card functions
 export function upsertCard(deck: string, front: string, back: string, notes: string | null): void {
   const database = getDb();
   const id = generateCardId(deck, front);
   const emptyCard = createEmptyCard();
+
+  // Ensure deck exists
+  ensureDeckExists(deck);
 
   database.prepare(`
     INSERT INTO cards (id, deck, front, back, notes, due, stability, difficulty, state)

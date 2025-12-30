@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAllCards } from "@/lib/db";
+import { getAllCards, getDeckBySlug } from "@/lib/db";
 import { State } from "ts-fsrs";
 
 export async function GET() {
@@ -17,23 +17,33 @@ export async function GET() {
     const markdown: Record<string, string> = {};
 
     for (const [deckSlug, deckCards] of Object.entries(decks)) {
+      // Get deck metadata from DB
+      const deckMeta = getDeckBySlug(deckSlug);
+      const name = deckMeta?.name || deckSlug;
+      const description = deckMeta?.description || "Exported from Vocab App";
+      const langFrom = deckMeta?.language_from || "en";
+      const langTo = deckMeta?.language_to || "en";
+
       const lines = [
         "---",
-        `name: ${deckSlug}`,
-        `description: Exported from Vocab App`,
-        "language_from: en",
-        "language_to: de",
+        `name: ${name}`,
+        `description: ${description}`,
+        `language_from: ${langFrom}`,
+        `language_to: ${langTo}`,
         "---",
         "",
-        "## Vokabeln",
+        "## Cards",
         "",
         "| front | back | notes |",
         "|-------|------|-------|",
       ];
 
       for (const card of deckCards) {
-        const notes = card.notes || "";
-        lines.push(`| ${card.front} | ${card.back} | ${notes} |`);
+        // Escape pipe characters in content
+        const front = (card.front || "").replace(/\|/g, "\\|");
+        const back = (card.back || "").replace(/\|/g, "\\|");
+        const notes = (card.notes || "").replace(/\|/g, "\\|");
+        lines.push(`| ${front} | ${back} | ${notes} |`);
       }
 
       markdown[deckSlug] = lines.join("\n");

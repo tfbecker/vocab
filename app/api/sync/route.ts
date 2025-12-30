@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAllDecks } from "@/lib/markdown";
-import { upsertCard, getDb } from "@/lib/db";
+import { upsertCard, upsertDeck, getDb } from "@/lib/db";
 
 export async function POST() {
   try {
@@ -11,6 +11,16 @@ export async function POST() {
     let synced = 0;
 
     for (const deck of decks) {
+      // Create/update deck in DB with proper metadata
+      upsertDeck(
+        deck.slug,
+        deck.name,
+        deck.description,
+        deck.language_from,
+        deck.language_to
+      );
+
+      // Import cards
       for (const card of deck.cards) {
         upsertCard(deck.slug, card.front, card.back, card.notes || null);
         synced++;
