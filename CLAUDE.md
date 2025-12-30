@@ -139,9 +139,9 @@ curl -X POST https://vocab.becker.im/api/sync
 
 ## Coolify App Info
 - **Project**: Main Prod (`m408o8osoo4848k8g0ckgwko`)
-- **App UUID**: `v8w8owcwcsos0gk4wcws4k40`
+- **App UUID**: `zgskwcoc4oggsogkc0gg8kk8`
 - **Domain**: vocab.becker.im
-- **Build**: Docker
+- **Build**: Docker Compose
 - **Port**: 3000
 
 ## Persistent Storage (WICHTIG!)
@@ -159,3 +159,30 @@ Die SQLite-Datenbank muss persistent sein, sonst gehen Daten bei Redeploy verlor
 6. Speichern und Redeploy
 
 **Docs:** https://coolify.io/docs/knowledge-base/persistent-storage
+
+## IMPORTANT: Deployment Verification
+
+**After pushing code changes, ALWAYS verify the deployment worked:**
+
+1. **Trigger deployment** (if not auto-deployed):
+   ```bash
+   node ~/.claude/skills/coolify/scripts/deploy.js --deploy zgskwcoc4oggsogkc0gg8kk8
+   ```
+
+2. **Wait for deployment** (typically 60-90 seconds for this app)
+
+3. **Verify via API test**:
+   ```bash
+   # Test a new/modified endpoint
+   curl -s https://vocab.becker.im/api/stats | jq 'keys'
+
+   # Or test specific feature
+   curl -s https://vocab.becker.im/api/comments?status=open
+   ```
+
+4. **Check container logs if issues**:
+   ```bash
+   sg docker -c "docker logs app-zgskwcoc4oggsogkc0gg8kk8-* --tail 50"
+   ```
+
+**Never assume deployment succeeded just because git push worked. Always test the live site.**
