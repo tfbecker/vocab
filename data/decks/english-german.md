@@ -5,7 +5,7 @@ language_from: en
 language_to: de
 ---
 
-## Vokabeln
+## Cards
 
 | front | back | notes |
 |-------|------|-------|

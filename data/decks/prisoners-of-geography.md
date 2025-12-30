@@ -5,10 +5,19 @@ language_from: en
 language_to: de
 ---
 
-## Vokabeln
+## Cards
 
 | front | back | notes |
 |-------|------|-------|
+| Japan - Key Facts | Population: 124M. GDP: $4.4T (#4 world). GDP/capita: $35,611 (32nd world). 4 main islands + 6,848 smaller. 3/4 uninhabitable (mountains). 13% farmable. 120mi from Eurasia - never successfully invaded. Tokyo: 39M (world's largest mega-city) |  |
+| Iran - Key Facts | Population: 89M. GDP: $470B. GDP/capita: $5,300 (103rd world). Majority Farsi-speaking. Bigger than France+Germany+UK. Zagros & Elburz mountains. Third-largest oil reserves |  |
+| Turkey - Key Facts | Population: 85M. GDP: $1.4T. GDP/capita: $16,876 (60th world). 98% Muslim. <5% of territory in Europe (west of Bosporus). Controls Black Sea exit through Bosporus (<1 mile wide). If closed, Russian Black Sea Fleet trapped |  |
+| Top 10 GDP/Capita - Europe (2025) | 1. Liechtenstein $232K, 2. Luxembourg $147K, 3. Ireland $129K, 4. Switzerland $111K, 5. Iceland $98K, 6. Norway $92K, 7. Denmark $77K, 8. Netherlands $73K, 9. San Marino $65K, 10. Sweden $62K | Note: Ireland/Luxembourg inflated by corporate tax accounting |
+| Top 10 GDP/Capita - Asia (2025) | 1. Singapore $94K, 2. Macau $75K, 3. Qatar $71K, 4. Israel $60K, 5. Hong Kong $57K, 6. UAE $51K, 7. Cyprus $42K, 8. Taiwan $38K, 9. South Korea $36K, 10. Saudi Arabia $35K | Oil wealth dominates Gulf states; East Asian tigers in middle |
+| Top 10 GDP/Capita - Africa (2025) | 1. Seychelles $22K, 2. Mauritius $11K, 3. Gabon $9K, 4. Botswana $8K, 5. Libya $7K, 6. Eq. Guinea $7K, 7. South Africa $6.5K, 8. Algeria $5.6K, 9. Namibia $4.7K, 10. Cabo Verde $4.4K | Island nations + oil/diamond economies lead; largest economies (Nigeria, Egypt) rank lower |
+| Top 10 GDP/Capita - North America (2025) | 1. USA $90K, 2. Canada $55K, 3. Puerto Rico $40K, 4. Bahamas $40K, 5. Aruba $40K, 6. Barbados $26K, 7. Antigua $22K, 8. St. Kitts $22K, 9. Panama $20K, 10. Costa Rica $19K | Caribbean tax havens + tourism economies fill middle ranks; Mexico at #13 ($14K) |
+| Top 10 GDP/Capita - South America (2025) | 1. Guyana $31K, 2. Uruguay $24K, 3. Chile $17K, 4. Argentina $14K, 5. Brazil $11K, 6. Peru $9K, 7. Colombia $8K, 8. Ecuador $7K, 9. Suriname $7K, 10. Paraguay $7K | Guyana's oil boom made it richest; Venezuela at bottom ($3K) due to crisis |
+| Top 10 GDP/Capita - Oceania (2025) | 1. Australia $66K, 2. New Zealand $49K, 3. Palau $19K, 4. Nauru $14K, 5. Marshall Islands $8K, 6. Fiji $7K, 7. Tonga $6K, 8. Samoa $6K, 9. Tuvalu $6K, 10. Micronesia $5K | Australia/NZ dominate; Pacific islands rely on tourism/fishing/phosphate |
 | Mercosur | South American trade bloc: Brazil, Argentina, Paraguay, Uruguay, Venezuela. Attempts at 'South American EU' but lacks shared currency, politics, education standards. |  |
 | Bolivia - Landlocked | Lost 250 miles of coastline to Chile in 1879 War of the Pacific. Never recovered. Among poorest Latin countries. Won't sell gas to Chile despite having 3rd largest reserves. |  |
 | Mexico - Geography Limits | Sierra Madre mountains dominate east and west. Desert north (buffer with USA). Jungle south. Poor soil on western slopes. Capital Mexico City: 20 million in Valley of Mexico. |  |
@@ -41,15 +50,15 @@ language_to: de
 | Korean War (1950-53) | North invaded South June 1950. US/UN pushed back almost to China border. China entered, pushed back to 38th parallel. 3 years fighting, ~4 million deaths. Ended in truce (not treaty) - technically still at war. |  |
 | North Korea (DPRK) | ~25 million people. 'Democratic People's Republic of Korea' - actually hereditary Communist monarchy. Juche philosophy: fierce nationalism + self-reliance. 150,000+ political prisoners. 84% of imports/exports with China. |  |
 | Seoul's Vulnerability | 35 miles from DMZ. Half of South Korea's 50 million live in greater Seoul region. 10,000 North Korean artillery pieces in hills above DMZ. Estimated 500,000 rounds could hit city in first hour of war. |  |
-| Japan - Key Facts | Population: 124M. GDP: $4.4T (#4 world). GDP/capita: $35,611 (32nd world). 4 main islands + 6,848 smaller. 3/4 uninhabitable (mountains). 13% farmable. 120mi from Eurasia - never successfully invaded. Tokyo: 39M (world's largest mega-city) |  |
+| Japan - Geography | 127 million people on 4 main islands + 6,848 smaller islands. 3/4 of land uninhabitable (mountains). Only 13% suitable for farming. 120 miles from Eurasian mainland - never successfully invaded. Tokyo: 39 million (world's largest mega-city). |  |
 | Kamikaze Origin | 1300s: Mongols tried to invade Japan after sweeping through China/Korea. Storm wrecked their fleet. Japanese called it 'Divine Wind' (kamikaze). Term reused for WWII suicide pilots. |  |
 | Japan Annexation of Korea (1910-45) | Banned Korean language and history teaching. Forced Shinto shrine worship. Cultural destruction. Legacy still poisons Japan-Korea relations today. |  |
 | Japan's Resource Problem | Few natural resources: little coal, almost no oil, limited gas, scarce metals. Drove 1930s-40s expansion into China, SE Asia. Still world's largest natural gas importer, 3rd largest oil importer. |  |
-| Iran - Key Facts | Population: 89M. GDP: $470B. GDP/capita: $5,300 (103rd world). Majority Farsi-speaking. Bigger than France+Germany+UK. Zagros & Elburz mountains. Third-largest oil reserves |  |
+| Iran - Geography | 78 million people, majority Farsi-speaking. Bigger than France, Germany, UK combined. Two mountain ranges: Zagros (900 miles along Iraq/Turkey borders) and Elburz (along Caspian Sea). Third-largest oil reserves. |  |
 | Iran - Military Defense | Mountains on 3 sides, swamps/water on 4th. Mongols (1219-21) were last to make progress. US in 2003: 'We do deserts, not mountains.' Iran-Iraq War 1980-88: Iraq never made it off swamp plains. ~1 million dead. |  |
 | Strait of Hormuz | Only 21 miles wide at narrowest. ~20% of world's daily oil passes through. Iran's trump card: can close it for months, spike global oil prices. Key reason countries pressure Israel not to strike Iran. |  |
 | Saudi-Iran Cold War | Core Middle East rivalry. Saudi: Sunni, 28M people, richer (oil developed). Iran: Shia, 78M people, larger military. Each wants to dominate region. Each champions its version of Islam. Iraq was buffer under Saddam. |  |
-| Turkey - Key Facts | Population: 85M. GDP: $1.4T. GDP/capita: $16,876 (60th world). 98% Muslim. <5% of territory in Europe (west of Bosporus). Controls Black Sea exit through Bosporus (<1 mile wide). If closed, Russian Black Sea Fleet trapped |  |
+| Turkey - Geography | 75 million people, 98% Muslim. Less than 5% of territory in Europe (west of Bosporus). Controls Black Sea exit through Bosporus (<1 mile wide). If closed, Russian Black Sea Fleet trapped. |  |
 | Atatürk (Mustafa Kemal) | Father of modern Turkey, died 1938. Only Turkish WWI general with enhanced reputation. Introduced: Western legal codes, Latin alphabet (replacing Arabic), Gregorian calendar, women's vote. Banned fez, Islamic institutions. |  |
 | Turkey's Strategic Position | Borders three seas. Trade bridge: Europe ↔ Middle East ↔ Caucasus ↔ Central Asia. NATO member. Controls Bosporus + Dardanelles = Russian naval chokepoint. Never fully accepted as European. |  |
 | Lebanon - Creation | French created it post-WWI for Arab Christians. Named after nearby mountains. Only census: 1932 (demographics too sensitive). Shia now majority. Hezbollah controls southern suburbs, backed by Iran. |  |
@@ -165,9 +174,3 @@ language_to: de
 | Kenya - Key Facts | Population: 56M. GDP: $122B. GDP/capita: $2,187 (127th world). East Africa's economic hub. 'Silicon Savannah' tech hub. China built $4B rail Mombasa→Nairobi |  |
 | Tanzania - Key Facts | Population: 67M. GDP: $85B. GDP/capita: $1,272 (133rd world). Building Bagamoyo port with China (will be Africa's largest). Member of East African Community & Southern African Development Community |  |
 | Algeria - Key Facts | Population: 46M. GDP: $258B (#3 Africa). GDP/capita: $5,593 (101st world). Largest African country by area. Major natural gas exporter to Europe. Independence war vs France (1954-62) |  |
-| Top 10 GDP/Capita - Europe (2025) | 1. Liechtenstein $232K, 2. Luxembourg $147K, 3. Ireland $129K, 4. Switzerland $111K, 5. Iceland $98K, 6. Norway $92K, 7. Denmark $77K, 8. Netherlands $73K, 9. San Marino $65K, 10. Sweden $62K | Note: Ireland/Luxembourg inflated by corporate tax accounting |
-| Top 10 GDP/Capita - Asia (2025) | 1. Singapore $94K, 2. Macau $75K, 3. Qatar $71K, 4. Israel $60K, 5. Hong Kong $57K, 6. UAE $51K, 7. Cyprus $42K, 8. Taiwan $38K, 9. South Korea $36K, 10. Saudi Arabia $35K | Oil wealth dominates Gulf states; East Asian tigers in middle |
-| Top 10 GDP/Capita - Africa (2025) | 1. Seychelles $22K, 2. Mauritius $11K, 3. Gabon $9K, 4. Botswana $8K, 5. Libya $7K, 6. Eq. Guinea $7K, 7. South Africa $6.5K, 8. Algeria $5.6K, 9. Namibia $4.7K, 10. Cabo Verde $4.4K | Island nations + oil/diamond economies lead; largest economies (Nigeria, Egypt) rank lower |
-| Top 10 GDP/Capita - North America (2025) | 1. USA $90K, 2. Canada $55K, 3. Puerto Rico $40K, 4. Bahamas $40K, 5. Aruba $40K, 6. Barbados $26K, 7. Antigua $22K, 8. St. Kitts $22K, 9. Panama $20K, 10. Costa Rica $19K | Caribbean tax havens + tourism economies fill middle ranks; Mexico at #13 ($14K) |
-| Top 10 GDP/Capita - South America (2025) | 1. Guyana $31K, 2. Uruguay $24K, 3. Chile $17K, 4. Argentina $14K, 5. Brazil $11K, 6. Peru $9K, 7. Colombia $8K, 8. Ecuador $7K, 9. Suriname $7K, 10. Paraguay $7K | Guyana's oil boom made it richest; Venezuela at bottom ($3K) due to crisis |
-| Top 10 GDP/Capita - Oceania (2025) | 1. Australia $66K, 2. New Zealand $49K, 3. Palau $19K, 4. Nauru $14K, 5. Marshall Islands $8K, 6. Fiji $7K, 7. Tonga $6K, 8. Samoa $6K, 9. Tuvalu $6K, 10. Micronesia $5K | Australia/NZ dominate; Pacific islands rely on tourism/fishing/phosphate |
