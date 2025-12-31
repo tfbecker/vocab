@@ -33,21 +33,21 @@ export function generateEmailHTML({ dueCards, stats, appUrl = "https://vocab.bec
 <head>
   <meta charset="utf-8">
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #f8fafc; padding: 20px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #f1f5f9; padding: 20px; }
     .container { max-width: 600px; margin: 0 auto; }
-    h1 { color: #38bdf8; margin-bottom: 24px; }
+    h1 { color: #7dd3fc; margin-bottom: 24px; }
     .section { background: #1e293b; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
-    .section-title { font-weight: bold; margin-bottom: 12px; color: #38bdf8; }
+    .section-title { font-weight: bold; margin-bottom: 12px; color: #7dd3fc; }
     .stat-row { display: flex; justify-content: space-between; padding: 4px 0; }
-    .stat-label { color: #94a3b8; }
-    .preview-item { padding: 8px 0; border-bottom: 1px solid #334155; }
+    .stat-label { color: #cbd5e1; }
+    .preview-item { padding: 8px 0; border-bottom: 1px solid #475569; }
     .preview-item:last-child { border-bottom: none; }
-    .preview-front { font-weight: 500; }
-    .preview-arrow { color: #94a3b8; margin: 0 8px; }
+    .preview-front { font-weight: 500; color: #f1f5f9; }
+    .preview-arrow { color: #cbd5e1; margin: 0 8px; }
     .cta { display: inline-block; background: #38bdf8; color: #0f172a; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 16px; }
-    .footer { margin-top: 24px; color: #64748b; font-size: 14px; }
-    .streak { color: #f97316; }
-    .retention { color: #22c55e; }
+    .footer { margin-top: 24px; color: #94a3b8; font-size: 14px; }
+    .streak { color: #fb923c; }
+    .retention { color: #4ade80; }
   </style>
 </head>
 <body>
