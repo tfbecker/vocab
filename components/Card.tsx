@@ -157,7 +157,7 @@ export default function Card({ id, front, back, notes, isFlipped, onFlip, onAddC
             >
               {front}
             </p>
-            <p className="mt-6 text-slate-400 text-sm">Click or press Space to reveal</p>
+            <p className="mt-6 text-slate-400 text-sm">Tap to reveal</p>
           </>
         ) : (
           <>

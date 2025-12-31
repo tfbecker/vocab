@@ -89,23 +89,6 @@ function ReviewContent() {
     }
   }, [cards, currentIndex, reviewing]);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === " " || e.key === "Enter") {
-        e.preventDefault();
-        setIsFlipped((f) => !f);
-      } else if (isFlipped && !reviewing) {
-        if (e.key === "1") handleRate(1);
-        else if (e.key === "2") handleRate(2);
-        else if (e.key === "3") handleRate(3);
-        else if (e.key === "4") handleRate(4);
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isFlipped, handleRate, reviewing]);
 
   if (loading) {
     return (
@@ -211,7 +194,7 @@ function ReviewContent() {
       {/* Hint */}
       {!isFlipped && (
         <p className="text-center text-slate-500 mt-8 text-sm">
-          Press Space or click the card to reveal
+          Tap the card to reveal
         </p>
       )}
     </div>
