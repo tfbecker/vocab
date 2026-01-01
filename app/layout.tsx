@@ -18,6 +18,7 @@ export default function RootLayout({
           <div className="mx-auto max-w-4xl px-4 py-4 flex items-center justify-between">
             <a href="/" className="text-xl font-bold text-sky-400">vocab</a>
             <div className="flex gap-6">
+              <a href="/cards" className="text-slate-300 hover:text-white transition">Cards</a>
               <a href="/decks" className="text-slate-300 hover:text-white transition">Decks</a>
               <a href="/stats" className="text-slate-300 hover:text-white transition">Stats</a>
             </div>

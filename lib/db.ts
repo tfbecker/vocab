@@ -85,6 +85,26 @@ function initDb() {
 
   database.prepare("CREATE INDEX IF NOT EXISTS idx_comments_card ON card_comments(card_id)").run();
   database.prepare("CREATE INDEX IF NOT EXISTS idx_comments_status ON card_comments(status)").run();
+
+  // Create card_versions table for version history
+  database.prepare(`
+    CREATE TABLE IF NOT EXISTS card_versions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      card_id TEXT NOT NULL,
+      version_number INTEGER NOT NULL,
+      front TEXT NOT NULL,
+      back TEXT NOT NULL,
+      notes TEXT,
+      change_type TEXT NOT NULL,
+      change_reason TEXT,
+      triggered_by_comment_id INTEGER,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (card_id) REFERENCES cards(id),
+      FOREIGN KEY (triggered_by_comment_id) REFERENCES card_comments(id)
+    )
+  `).run();
+
+  database.prepare("CREATE INDEX IF NOT EXISTS idx_versions_card ON card_versions(card_id)").run();
 }
 
 export function generateCardId(deck: string, front: string): string {
@@ -270,6 +290,31 @@ interface StateCountRow { state: number; count: number }
 interface DateRow { date: string }
 interface RetentionRow { total: number; passed: number }
 
+// Points calculation for streak system
+// Easy (4) = 1 point, Good (3) = 0.5 points, Hard (2) = 0, Again (1) = 0
+const DAILY_GOAL_POINTS = 10;
+
+function calculatePoints(rating: number): number {
+  if (rating === 4) return 1;    // Easy
+  if (rating === 3) return 0.5;  // Good
+  return 0;                       // Hard (2) or Again (1)
+}
+
+function getPointsForDate(database: Database.Database, date: string): number {
+  const reviews = database.prepare(`
+    SELECT rating, COUNT(*) as count
+    FROM reviews
+    WHERE DATE(reviewed_at) = ?
+    GROUP BY rating
+  `).all(date) as { rating: number; count: number }[];
+
+  let points = 0;
+  for (const row of reviews) {
+    points += calculatePoints(row.rating) * row.count;
+  }
+  return points;
+}
+
 export function getStats(): ReviewStats {
   const database = getDb();
 
@@ -289,11 +334,10 @@ export function getStats(): ReviewStats {
     }
   }
 
-  // Calculate streak (consecutive days with reviews)
-  const recentReviews = database.prepare(`
-    SELECT DATE(reviewed_at) as date
+  // Calculate streak (consecutive days with >= 10 points)
+  const recentDates = database.prepare(`
+    SELECT DISTINCT DATE(reviewed_at) as date
     FROM reviews
-    GROUP BY DATE(reviewed_at)
     ORDER BY date DESC
     LIMIT 30
   `).all() as DateRow[];
@@ -302,12 +346,19 @@ export function getStats(): ReviewStats {
   const today = new Date().toISOString().split("T")[0];
   let checkDate = today;
 
-  for (const row of recentReviews) {
+  for (const row of recentDates) {
     if (row.date === checkDate) {
-      streak++;
-      const d = new Date(checkDate);
-      d.setDate(d.getDate() - 1);
-      checkDate = d.toISOString().split("T")[0];
+      // Check if this date has >= 10 points
+      const dayPoints = getPointsForDate(database, row.date);
+      if (dayPoints >= DAILY_GOAL_POINTS) {
+        streak++;
+        const d = new Date(checkDate);
+        d.setDate(d.getDate() - 1);
+        checkDate = d.toISOString().split("T")[0];
+      } else {
+        // Day exists but didn't meet goal - streak broken
+        break;
+      }
     } else {
       break;
     }
@@ -463,27 +514,50 @@ export function getReviewActivity(days: number = 140): DailyActivity[] {
   return activity;
 }
 
-// Daily goal tracking
-const DAILY_GOAL = 10;
-
+// Daily goal tracking - Points system
 interface TodayStats {
   reviews_today: number;
+  points_today: number;
   daily_goal: number;
   goal_completed: boolean;
-  xp_today: number; // 10 XP per review
+  xp_today: number;
   total_xp: number;
+  breakdown: {
+    easy: number;
+    good: number;
+    hard: number;
+    again: number;
+  };
 }
 
 export function getTodayStats(): TodayStats {
   const database = getDb();
   const today = new Date().toISOString().split("T")[0];
 
-  // Get today's review count
+  // Get today's reviews with ratings
   const todayReviews = database.prepare(`
-    SELECT COUNT(*) as count
+    SELECT rating, COUNT(*) as count
     FROM reviews
     WHERE DATE(reviewed_at) = ?
-  `).get(today) as { count: number };
+    GROUP BY rating
+  `).all(today) as { rating: number; count: number }[];
+
+  // Calculate breakdown and points
+  const breakdown = { easy: 0, good: 0, hard: 0, again: 0 };
+  let reviewCount = 0;
+  let pointsToday = 0;
+
+  for (const row of todayReviews) {
+    reviewCount += row.count;
+    pointsToday += calculatePoints(row.rating) * row.count;
+
+    switch (row.rating) {
+      case 4: breakdown.easy = row.count; break;
+      case 3: breakdown.good = row.count; break;
+      case 2: breakdown.hard = row.count; break;
+      case 1: breakdown.again = row.count; break;
+    }
+  }
 
   // Get total reviews for XP
   const totalReviews = database.prepare(`
@@ -491,11 +565,13 @@ export function getTodayStats(): TodayStats {
   `).get() as { count: number };
 
   return {
-    reviews_today: todayReviews.count,
-    daily_goal: DAILY_GOAL,
-    goal_completed: todayReviews.count >= DAILY_GOAL,
-    xp_today: todayReviews.count * 10,
-    total_xp: totalReviews.count * 10
+    reviews_today: reviewCount,
+    points_today: pointsToday,
+    daily_goal: DAILY_GOAL_POINTS,
+    goal_completed: pointsToday >= DAILY_GOAL_POINTS,
+    xp_today: reviewCount * 10,
+    total_xp: totalReviews.count * 10,
+    breakdown
   };
 }
 
@@ -614,6 +690,297 @@ export function deleteComment(id: number): boolean {
   const result = database.prepare(`
     DELETE FROM card_comments WHERE id = ?
   `).run(id);
+
+  return result.changes > 0;
+}
+
+// Card listing with pagination and search
+interface CardListParams {
+  deck?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: 'created' | 'due' | 'front';
+  sortOrder?: 'asc' | 'desc';
+}
+
+interface CardListResult {
+  cards: Card[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export function getCardList(params: CardListParams = {}): CardListResult {
+  const database = getDb();
+  const {
+    deck,
+    search,
+    page = 1,
+    limit = 50,
+    sortBy = 'created',
+    sortOrder = 'desc'
+  } = params;
+
+  const conditions: string[] = [];
+  const queryParams: (string | number)[] = [];
+
+  if (deck) {
+    conditions.push("deck = ?");
+    queryParams.push(deck);
+  }
+
+  if (search) {
+    conditions.push("(front LIKE ? OR back LIKE ?)");
+    queryParams.push(`%${search}%`, `%${search}%`);
+  }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  // Get total count
+  const countRow = database.prepare(`SELECT COUNT(*) as count FROM cards ${whereClause}`).get(...queryParams) as { count: number };
+  const total = countRow.count;
+
+  // Sort column mapping
+  const sortColumn = sortBy === 'created' ? 'created_at' : sortBy === 'due' ? 'due' : 'front';
+  const order = sortOrder.toUpperCase();
+
+  // Get paginated results
+  const offset = (page - 1) * limit;
+  const rows = database.prepare(`
+    SELECT * FROM cards ${whereClause}
+    ORDER BY ${sortColumn} ${order}
+    LIMIT ? OFFSET ?
+  `).all(...queryParams, limit, offset) as CardRow[];
+
+  return {
+    cards: rows.map(rowToCard),
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit)
+  };
+}
+
+// Delete card by ID (including reviews and comments)
+export function deleteCardById(id: string): boolean {
+  const database = getDb();
+
+  // Delete related data first
+  database.prepare("DELETE FROM reviews WHERE card_id = ?").run(id);
+  database.prepare("DELETE FROM card_comments WHERE card_id = ?").run(id);
+  database.prepare("DELETE FROM card_versions WHERE card_id = ?").run(id);
+
+  const result = database.prepare("DELETE FROM cards WHERE id = ?").run(id);
+  return result.changes > 0;
+}
+
+// Get card with comment count
+export function getCardWithMeta(id: string): (Card & { commentCount: number; openCommentCount: number }) | null {
+  const database = getDb();
+  const row = database.prepare("SELECT * FROM cards WHERE id = ?").get(id) as CardRow | undefined;
+  if (!row) return null;
+
+  const commentStats = database.prepare(`
+    SELECT
+      COUNT(*) as total,
+      SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END) as open
+    FROM card_comments WHERE card_id = ?
+  `).get(id) as { total: number; open: number };
+
+  return {
+    ...rowToCard(row),
+    commentCount: commentStats.total,
+    openCommentCount: commentStats.open
+  };
+}
+
+// Version history management
+export type ChangeType = 'initial' | 'user_edit' | 'claude_edit';
+
+export interface CardVersion {
+  id: number;
+  card_id: string;
+  version_number: number;
+  front: string;
+  back: string;
+  notes: string | null;
+  change_type: ChangeType;
+  change_reason: string | null;
+  triggered_by_comment_id: number | null;
+  comment_content?: string;
+  created_at: string;
+}
+
+interface VersionRow {
+  id: number;
+  card_id: string;
+  version_number: number;
+  front: string;
+  back: string;
+  notes: string | null;
+  change_type: string;
+  change_reason: string | null;
+  triggered_by_comment_id: number | null;
+  created_at: string;
+  comment_content?: string;
+}
+
+export function createCardVersion(
+  cardId: string,
+  front: string,
+  back: string,
+  notes: string | null,
+  changeType: ChangeType,
+  changeReason?: string,
+  triggeredByCommentId?: number
+): CardVersion {
+  const database = getDb();
+
+  // Get next version number
+  const lastVersion = database.prepare(`
+    SELECT MAX(version_number) as max_version FROM card_versions WHERE card_id = ?
+  `).get(cardId) as { max_version: number | null };
+
+  const versionNumber = (lastVersion.max_version || 0) + 1;
+
+  const result = database.prepare(`
+    INSERT INTO card_versions (card_id, version_number, front, back, notes, change_type, change_reason, triggered_by_comment_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    cardId,
+    versionNumber,
+    front,
+    back,
+    notes,
+    changeType,
+    changeReason || null,
+    triggeredByCommentId || null
+  );
+
+  return {
+    id: result.lastInsertRowid as number,
+    card_id: cardId,
+    version_number: versionNumber,
+    front,
+    back,
+    notes,
+    change_type: changeType,
+    change_reason: changeReason || null,
+    triggered_by_comment_id: triggeredByCommentId || null,
+    created_at: new Date().toISOString()
+  };
+}
+
+export function getCardVersions(cardId: string): CardVersion[] {
+  const database = getDb();
+
+  const rows = database.prepare(`
+    SELECT
+      cv.*,
+      cc.content as comment_content
+    FROM card_versions cv
+    LEFT JOIN card_comments cc ON cv.triggered_by_comment_id = cc.id
+    WHERE cv.card_id = ?
+    ORDER BY cv.version_number DESC
+  `).all(cardId) as VersionRow[];
+
+  return rows.map(row => ({
+    id: row.id,
+    card_id: row.card_id,
+    version_number: row.version_number,
+    front: row.front,
+    back: row.back,
+    notes: row.notes,
+    change_type: row.change_type as ChangeType,
+    change_reason: row.change_reason,
+    triggered_by_comment_id: row.triggered_by_comment_id,
+    comment_content: row.comment_content || undefined,
+    created_at: row.created_at
+  }));
+}
+
+export function ensureInitialVersion(cardId: string): void {
+  const database = getDb();
+
+  // Check if card already has versions
+  const existing = database.prepare(`
+    SELECT COUNT(*) as count FROM card_versions WHERE card_id = ?
+  `).get(cardId) as { count: number };
+
+  if (existing.count > 0) return;
+
+  // Get current card state and create initial version
+  const card = getCardById(cardId);
+  if (!card) return;
+
+  createCardVersion(
+    cardId,
+    card.front,
+    card.back,
+    card.notes,
+    'initial'
+  );
+}
+
+// Update card with version tracking
+export function updateCardWithVersion(
+  id: string,
+  updates: { back?: string; notes?: string },
+  changeType: ChangeType = 'user_edit',
+  changeReason?: string,
+  triggeredByCommentId?: number
+): boolean {
+  const database = getDb();
+
+  // Get current card state first
+  const existingCard = getCardById(id);
+  if (!existingCard) return false;
+
+  // Ensure initial version exists
+  ensureInitialVersion(id);
+
+  // Build update query
+  const setClauses: string[] = [];
+  const params: (string | null)[] = [];
+
+  const newBack = updates.back !== undefined ? updates.back : existingCard.back;
+  const newNotes = updates.notes !== undefined ? (updates.notes ?? null) : existingCard.notes;
+
+  if (updates.back !== undefined) {
+    setClauses.push("back = ?");
+    params.push(updates.back);
+  }
+  if (updates.notes !== undefined) {
+    setClauses.push("notes = ?");
+    params.push(updates.notes ?? null);
+  }
+
+  if (setClauses.length === 0) return false;
+
+  params.push(id);
+  const result = database.prepare(`
+    UPDATE cards SET ${setClauses.join(", ")} WHERE id = ?
+  `).run(...params);
+
+  if (result.changes > 0) {
+    // Create new version
+    createCardVersion(
+      id,
+      existingCard.front,
+      newBack,
+      newNotes,
+      changeType,
+      changeReason,
+      triggeredByCommentId
+    );
+
+    // If triggered by comment, mark it as completed
+    if (triggeredByCommentId) {
+      updateCommentStatus(triggeredByCommentId, 'completed');
+    }
+  }
 
   return result.changes > 0;
 }

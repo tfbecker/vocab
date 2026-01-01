@@ -19,10 +19,17 @@ interface DeckStats {
 
 interface TodayStats {
   reviews_today: number;
+  points_today: number;
   daily_goal: number;
   goal_completed: boolean;
   xp_today: number;
   total_xp: number;
+  breakdown: {
+    easy: number;
+    good: number;
+    hard: number;
+    again: number;
+  };
 }
 
 interface Stats {
@@ -77,10 +84,12 @@ export default function Home() {
   const totalDue = decks.reduce((sum, d) => sum + d.stats.due, 0);
   const today = stats?.today;
   const dailyGoal = today?.daily_goal || 10;
+  const pointsToday = today?.points_today || 0;
   const reviewsToday = today?.reviews_today || 0;
   const goalCompleted = today?.goal_completed || false;
-  const progressPercent = Math.min((reviewsToday / dailyGoal) * 100, 100);
-  const cardsNeededForGoal = Math.max(0, dailyGoal - reviewsToday);
+  const progressPercent = Math.min((pointsToday / dailyGoal) * 100, 100);
+  const pointsNeeded = Math.max(0, dailyGoal - pointsToday);
+  const breakdown = today?.breakdown || { easy: 0, good: 0, hard: 0, again: 0 };
 
   if (loading) {
     return (
@@ -124,14 +133,29 @@ export default function Home() {
           <div>
             <h2 className="text-lg font-semibold text-white">Daily Goal</h2>
             <p className="text-sm text-slate-400">
-              {goalCompleted ? "Completed! Streak safe" : `${cardsNeededForGoal} more to maintain streak`}
+              {goalCompleted ? "Completed! Streak safe" : `${pointsNeeded.toFixed(1)} pts more to maintain streak`}
             </p>
           </div>
           <div className="text-right">
-            <div className="text-3xl font-bold text-white">{reviewsToday}/{dailyGoal}</div>
-            <div className="text-xs text-slate-400">cards today</div>
+            <div className="text-3xl font-bold text-white">{pointsToday.toFixed(1)}/{dailyGoal}</div>
+            <div className="text-xs text-slate-400">points today</div>
           </div>
         </div>
+
+        {/* Points breakdown */}
+        {reviewsToday > 0 && (
+          <div className="flex gap-3 mb-3 text-xs">
+            {breakdown.easy > 0 && (
+              <span className="text-green-400">Easy ×{breakdown.easy} = {breakdown.easy} pts</span>
+            )}
+            {breakdown.good > 0 && (
+              <span className="text-sky-400">Good ×{breakdown.good} = {(breakdown.good * 0.5).toFixed(1)} pts</span>
+            )}
+            {(breakdown.hard > 0 || breakdown.again > 0) && (
+              <span className="text-slate-500">Hard/Again ×{breakdown.hard + breakdown.again} = 0 pts</span>
+            )}
+          </div>
+        )}
 
         {/* Progress bar */}
         <div className="h-3 bg-slate-700 rounded-full overflow-hidden mb-4">
@@ -144,10 +168,10 @@ export default function Home() {
         {/* Action buttons */}
         {!goalCompleted && totalDue > 0 ? (
           <a
-            href={`/review?limit=${cardsNeededForGoal}`}
+            href="/review"
             className="block w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-6 rounded-xl text-center text-lg transition-colors shadow-lg shadow-orange-500/20"
           >
-            Start Daily Goal ({Math.min(cardsNeededForGoal, totalDue)} cards)
+            Continue Reviewing ({totalDue} cards due)
           </a>
         ) : goalCompleted ? (
           <div className="flex items-center justify-center gap-2 text-green-400 font-semibold py-4">

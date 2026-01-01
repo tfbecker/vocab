@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { updateCardById, getCardById, generateCardId, getDb } from "@/lib/db";
+import { updateCardWithVersion, getCardById, generateCardId, getDb, ChangeType } from "@/lib/db";
 
 interface UpdateCardRequest {
   id?: string;
@@ -7,6 +7,9 @@ interface UpdateCardRequest {
   front?: string;
   back?: string;
   notes?: string;
+  changeType?: ChangeType;
+  changeReason?: string;
+  triggeredByCommentId?: number;
 }
 
 interface BulkUpdateRequest {
@@ -16,6 +19,9 @@ interface BulkUpdateRequest {
     front?: string;
     back?: string;
     notes?: string;
+    changeType?: ChangeType;
+    changeReason?: string;
+    triggeredByCommentId?: number;
   }>;
 }
 
@@ -50,7 +56,13 @@ export async function POST(request: NextRequest) {
         if (card.notes !== undefined) updates.notes = card.notes;
 
         if (Object.keys(updates).length > 0) {
-          const success = updateCardById(cardId, updates);
+          const success = updateCardWithVersion(
+            cardId,
+            updates,
+            card.changeType || 'claude_edit',
+            card.changeReason,
+            card.triggeredByCommentId
+          );
           if (success) {
             updated++;
           } else {
@@ -68,7 +80,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Handle single update
-    const { id, deck, front, back, notes } = body as UpdateCardRequest;
+    const { id, deck, front, back, notes, changeType, changeReason, triggeredByCommentId } = body as UpdateCardRequest;
 
     let cardId = id;
     if (!cardId && front) {
@@ -103,7 +115,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    updateCardById(cardId, updates);
+    updateCardWithVersion(
+      cardId,
+      updates,
+      changeType || 'claude_edit',
+      changeReason,
+      triggeredByCommentId
+    );
 
     return NextResponse.json({
       success: true,
